@@ -1,0 +1,31 @@
+model
+{
+  for (i in 1:Nobs){
+      visits[i] ~ dpois(mu[i])
+      x[i,1]<-1
+      x[i,2]<-(year[i]-mean(year[]))
+      x[i,3]<-Gender[i]
+      x[i,4] <- Chronic[i]
+      x[i,5]<-Education[i]
+      x[i,6] <- (Age[i]-mean(Age[]))
+      log(mu[i]) <- inprod(beta[],x[i,])+b0[id[i]]
+    }
+for (i in 1:C){
+    b0[i] ~ dnorm(0,tau.b02)
+  }
+  
+  for (r in 1:6){
+	mu.beta[r] <-0.0}
+  
+  c<-1.0E-6
+  for (r in 1:6){for(s in 1:6){
+  prec.beta[r,s]<-equals(r,s)*c
+  }}
+  ## Vague prior distributions
+  
+  #tau.b0
+  sigma.b0 ~ dunif(0,100)
+  sigma.b02 <- pow(sigma.b0,2)
+  tau.b02 <- 1/sigma.b02
+  beta[1:6] ~ dmnorm(mu.beta[],prec.beta[,])
+}

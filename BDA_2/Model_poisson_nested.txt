@@ -1,0 +1,41 @@
+model
+	{
+	for (i in 1:Nobs){
+    		visits[i] ~ dpois(mu[i])
+		log(mu[i]) <- beta[2]*(year[i]-mean(year[]))+b0[id[i]]
+	}
+ 
+	for (i in 1:C){
+  		b0[i] ~ dnorm(b1[famid[i]]+beta[3]*Gender[6*i]+beta[4]*Chronic[6*i]+beta[5]*Education[6*i]+beta[6]*(Age[6*i]-mean(Age[])),tau.b02)
+
+	}
+	for (i in 1:Nfam){
+		b1[i] ~dnorm(beta[1],tau.b12)
+ 	}  
+
+
+		#Vague prior distributions
+
+		for (k in 1:6){
+			beta[k] ~ dnorm(0,1.0E-6)
+		}		
+
+		#tau.b0
+  		sigma.b0 ~ dunif(0,100)
+  		sigma.b02 <- pow(sigma.b0,2)
+  		tau.b02 <- 1/sigma.b02
+		tau.b12 <- 1/sigma.b12
+  		sigma.b1 ~ dunif(0,100)
+  		sigma.b12 <- pow(sigma.b1,2)
+
+
+		# PSBF
+		for (i in 1:C){
+			for (j in 1:6){
+					vec.ppo[i,j] <- exp(-mu[6*(i-1)+j]+visits[6*(i-1)+j]*log(mu[6*(i-1)+j])-logfact(visits[6*(i-1)+j]))
+			}
+    			ppo[i] <- prod(vec.ppo[i,1:6])
+    			icpo[i] <- 1/(ppo[i]+1.0E-100)
+		}
+
+ }

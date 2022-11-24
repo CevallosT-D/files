@@ -1,0 +1,111 @@
+model
+	{
+  		for (i in 1:Nobs){
+     				visits[i] ~ dpois(mu[i])
+     				log(mu[i]) <-beta[2]*(year[i]-mean(year[]))+b0[id[i]]
+     				}
+		for (i in 1:C){
+     			b0[i] ~ dnorm(beta[1]+beta[3]*Gender[6*i]+beta[4]*Chronic[6*i]+beta[5]*Education[6*i]+beta[6]*(Age[6*i]-mean(Age[])),tau.b02)
+			n[i] <- b0[i]-(beta[1]+beta[3]*Gender[6*i]+beta[4]*Chronic[6*i]+beta[5]*Education[6*i]+beta[6]*(Age[6*i]-mean(Age[])))
+
+      		# posterior predictive checks
+		n.rep[i] ~ dnorm(0,tau.b02)
+      		rs[i] <- n[i]/sigma.b0
+      		rs.rep[i] <- n.rep[i]/sigma.b0
+  		}
+    		mean.n <- mean(n[])
+  		mean.n.rep <- mean(n.rep[])
+  		sd.n <- sd(n[])
+  		sd.n.rep <- sd(n.rep[])
+  
+  
+  		# min and max of the random effects
+  		rank.n <- sort(n[])
+		rank.n.rep <- sort(n.rep[])
+  		tmin <- rank.n[1]
+  		tmax <- rank.n[C]
+  		tmin.rep <- rank.n.rep[1]
+  		tmax.rep <- rank.n.rep[C]
+  
+  		tmin.test <- step(tmin-tmin.rep)
+  		tmax.test <- step(tmax.rep-tmax)
+  
+  		# checking skewness and kurtosis of the random effects (posterior mean)
+  
+  		for (i in 1:C){
+    		m3.sample[i] <- pow((n[i]-mean.n)/(sd.n+1.0E-100),3)
+    		m4.sample[i] <- pow((n[i]-mean.n)/(sd.n+1.0E-100),4)
+    		m3.sample.rep[i] <- pow((n.rep[i]-mean.n.rep)/(sd.n.rep+1.0E-100),3)
+    		m4.sample.rep[i] <- pow((n.rep[i]-mean.n.rep)/(sd.n.rep+1.0E-100),4)
+  		}  
+  
+  		m3s <- sum(m3.sample[])/C
+  		m4s <- sum(m4.sample[])/C - 3
+  		m3s.rep <- sum(m3.sample.rep[])/C
+  		m4s.rep <- sum(m4.sample.rep[])/C - 3
+  
+  		skewness.test  <- step(m3s.rep - m3s)
+  		kurtosis.test <- step(m4s.rep-m4s)
+
+  		# p95 test
+  		for (i in 1:C){
+    		p95.ind[i] <- step(abs(rs[i])-2)
+    		p95.ind.rep[i] <- step(abs(rs.rep[i])-2)
+  		}
+  		p95.mean <- mean(p95.ind[])
+  		p95.mean.rep <- mean(p95.ind.rep[])
+  		p95.test <- step(p95.mean.rep-p95.mean)
+  
+		# Kolmogorov-Smirnov test for random effects
+
+ 		for (i in 1:C){
+   			F.gauss[i] <- phi(rank.n[i])
+   			F.gauss.rep[i] <-  phi( rank.n.rep[i])
+
+   			F.diff[i] <- max(F.gauss[i]-(i-1)/C,i/C-F.gauss[i])
+   			F.diff.rep[i] <- max(F.gauss.rep[i]-(i-1)/C,i/C-F.gauss.rep[i])
+			}  
+		rank.ks <- sort(F.diff[])
+		rank.ks.rep <- sort(F.diff.rep[])
+   		ks <- rank.ks[C]
+   		ks.rep <- rank.ks.rep[C]
+
+   		ks.test <- step(ks.rep-ks)  
+
+		# gap test for random effects
+
+ 		for (i in 1:(C-1)){
+   		gap[i] <-   rank.n[i+1]-rank.n[i]
+   		gap.rep[i] <-   rank.n.rep[i+1]-rank.n.rep[i]
+		}  
+		n1 <- C-1
+		rank.gap <- sort(gap[])
+		rank.gap.rep <- sort(gap.rep[])
+   		gap.max <- rank.gap[n1]
+   		gap.max.rep <- rank.gap.rep[n1]
+   		gap.test <- step(gap.max.rep-gap.max)
+
+  
+ 		#Vague prior distributions
+ 
+
+  		#tau.b0
+  		sigma.b0 ~ dunif(0,100)
+  		sigma.b02 <- pow(sigma.b0,2)
+  		tau.b02 <- 1/sigma.b02
+
+
+		for (k in 1:6){
+			beta[k] ~ dnorm(0,1.0E-6)
+		}
+
+		# tests
+
+		test[1] <- tmin.test
+		test[2] <- tmax.test
+		test[3] <- skewness.test
+		test[4] <- kurtosis.test
+		test[5] <- ks.test
+		test[6] <- gap.test
+		test[7] <- p95.test
+		}

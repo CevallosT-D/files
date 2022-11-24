@@ -1,0 +1,67 @@
+model
+{
+  for (i in 1:Nobs){
+     		visits[i] ~ dpois(mu[i])
+     		log(mu[i]) <-beta[2]*(year[i]-mean(year[]))+b0[id[i]]
+      
+      # future observations
+      visits.rep[i] ~ dpois(mu[i])
+    }
+for (i in 1:C){
+    b0[i] ~ dnorm(beta[1]+beta[3]*Gender[6*i]+beta[4]*Chronic[6*i]+beta[5]*Education[6*i]+beta[6]*(Age[6*i]-mean(Age[])),tau.b02)
+  }
+  
+  for (k in 1:6){
+	beta[k] ~ dnorm(0,1.0E-6)
+	}
+
+  ## Vague prior distributions
+  
+  #tau.b0
+  sigma.b0 ~ dunif(0,100)
+  sigma.b02 <- pow(sigma.b0,2)
+  tau.b02 <- 1/sigma.b02
+
+
+  # Posterior predictive checks overdispersion
+	# test1
+	var.visits.obs<-pow(sd(visits[]),2)
+	var.visits.obs.rep <- pow(sd(visits.rep[]),2)
+	var.test1<-step(var.visits.obs.rep-var.visits.obs)
+
+	# test2
+	for (i in 1:Nobs){
+		var.visits.ind[i] <- pow(visits[i]-mu[i],2)
+		var.visits.ind.rep[i] <- pow(visits.rep[i]-mu[i],2)
+	}
+	var.visits <- sum(var.visits.ind[])
+	var.visits.rep <- sum(var.visits.ind.rep[])
+	var.test2 <- step(var.visits.rep-var.visits)
+
+	
+        # test3: deviance test 
+	for( i in 1 : Nobs) {
+        dev1[i] <- -2*(mu[i]+visits[i]*log(mu[i]))
+        dev1.rep[i] <-  -2*(mu[i]+visits.rep[i]*log(mu[i]))
+         }
+        deviance1 <- sum(dev1[])
+        deviance1.rep <- sum(dev1.rep[])
+        deviance1.test <- step(deviance1.rep-deviance1)
+
+        # test 4: scaled deviance test
+	for( i in 1 : Nobs) {
+        dev2[i] <- -2*((visits[i]-mu[i])+(visits[i])*(log(mu[i])-log(visits[i])))
+        dev2.rep[i] <- -2*((visits.rep[i]-mu[i])+(visits.rep[i])*(log(mu[i])-log(visits.rep[i])))
+        }
+        deviance2 <- sum(dev2[])
+        deviance2.rep <- sum(dev2.rep[])
+        deviance2.test <- step(deviance2.rep-deviance2)
+
+	# tests
+	test[1]  <- var.test1
+	test[2] <- var.test2
+	test[3] <- deviance1.test
+	test[4] <- deviance2.test
+
+	
+}

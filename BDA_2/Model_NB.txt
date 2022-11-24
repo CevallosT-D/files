@@ -1,0 +1,35 @@
+model
+{
+  for (i in 1:Nobs){
+      visits[i] ~ dnegbin(p[i],r)
+      p[i] <- r/(r+mu[i])
+      log(mu[i]) <-beta[2]*(year[i]-mean(year[]))+b0[id[i]]
+    }
+for (i in 1:C){
+     	b0[i] ~ dnorm(beta[1]+beta[3]*Gender[6*i]+beta[4]*Chronic[6*i]+beta[5]*Education[6*i]+beta[6]*(Age[6*i]-mean(Age[])),tau.b02)
+  }
+  
+
+  ## Vague prior distributions
+  
+  #tau.b0
+  sigma.b0 ~ dunif(0,10000)
+  sigma.b02 <- pow(sigma.b0,2)
+  tau.b02 <- 1/sigma.b02
+
+  for (k in 1:6){
+	beta[k] ~ dnorm(0,1.0E-6)
+   }
+
+  r ~ dunif(0,10000)
+
+# PSBF
+for (i in 1:C){
+	for (j in 1:6){
+		vec.ppo[i,j] <-exp( loggam(visits[6*(i-1)+j]+r)-loggam(visits[6*(i-1)+j]+1)-loggam(r) + r*log(p[6*(i-1)+j])+(visits[6*(i-1)+j])*log(1-p[6*(i-1)+j]) )
+	}
+    	ppo[i] <- prod(vec.ppo[i,1:6])
+    	icpo[i] <- 1/(ppo[i]+1.0E-100)
+	}
+
+}
