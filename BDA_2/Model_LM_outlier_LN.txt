@@ -6,7 +6,7 @@ model
     mu[i] <- beta[2]*(year[i]-mean(year[]))+b0[id[i]]
     
     #prediction of observations 
-    ped.vis{i} ~ dlnorm(mu[i], tau)
+    ped.vis[i] ~ dlnorm(mu[i], tau)
   }
   for (i in 1:C){
     b0[i] ~ dnorm(beta[1]+beta[3]*Gender[6*i]+beta[4]*Chronic[6*i]+beta[5]*Education[6*i]+beta[6]*(Age[6*i]-mean(Age[])),tau.b02)
@@ -41,7 +41,7 @@ model
   
   #prediction new observations of a new individual
   mu.new ~ dnorm(mean(mu[]),tau)
-  for (j in 1:nnew){  
+  for (j in 1:1080){  
     predict.new[j] ~ dnorm(mu.new,tau)
   }
   mpredict.new <- mean(predict.new[])
