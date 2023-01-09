@@ -6,7 +6,7 @@ for (i in 1:Nobs){
 }
  
 for (i in 1:C){
-  	b0[i] ~ dnorm(b1[famid[i]]+beta[3]*Gender[6*i]+beta[4]*Chronic[6*i]+beta[5]*Education[6*i]+beta[6]*(Age[6*i]-mean(Age[])),tau.b02)
+  	b0[i] ~ dnorm(b1[famid[6*i]]+beta[3]*Gender[6*i]+beta[4]*Chronic[6*i]+beta[5]*Education[6*i]+beta[6]*(Age[6*i]-mean(Age[])),tau.b02)
 
 }
 for (i in 1:Nfam){
