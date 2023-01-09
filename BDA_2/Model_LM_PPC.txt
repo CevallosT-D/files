@@ -8,8 +8,10 @@ for (i in 1:Nobs){
       # future observations
       visits.rep[i] ~ dnorm(mu[i], tau)
       # residuals
-      rs[i] <- (visits[i]-mu[i])/sigma
-      rs.rep[i] <- (visits.rep[i]-mu[i])/sigma
+      rs[i] <- visits[i]-mu[i]
+      rs.rep[i] <- visits.rep[i]-mu[i]
+      rs.st[i] <- (visits[i]-mu[i])/sigma
+      rs.rep.st[i] <- (visits.rep[i]-mu[i])/sigma
     }
 for (i in 1:C){
    b0[i] ~ dnorm(beta[1]+beta[3]*Gender[6*i]+beta[4]*Chronic[6*i]+beta[5]*Education[6*i]+beta[6]*(Age[6*i]-mean(Age[])),tau.b02)
@@ -31,30 +33,30 @@ for (i in 1:C){
 	beta[k] ~ dnorm(0,1.0E-6)
    }
 
-  # Posterior predictive checks normality visits
-    	mean.visits <- mean(visits[])
-  	mean.visits.rep <- mean(visits.rep[])
-  	sd.visits  <- sd(visits[])
-  	sd.visits.rep <- sd(visits.rep[])
+  # Posterior predictive checks normality residuals
+    	mean.rs <- mean(rs[])
+  	mean.rs.rep <- mean(rs.rep[])
+  	sd.rs  <- sd(rs[])
+  	sd.rs.rep <- sd(rs.rep[])
 
   	# min and max of the error terms
-  	rank.visits <- sort(visits[])
-	rank.visits.rep <- sort(visits.rep[])
-  	tmin <- rank.visits[1]
-  	tmax <- rank.visits[Nobs]
-  	tmin.rep <- rank.visits.rep[1]
-  	tmax.rep <- rank.visits.rep[Nobs]
+  	rank.rs <- sort(rs[])
+	rank.rs.rep <- sort(rs.rep[])
+  	tmin <- rank.rs[1]
+  	tmax <- rank.rs[Nobs]
+  	tmin.rep <- rank.rs.rep[1]
+  	tmax.rep <- rank.rs.rep[Nobs]
   
   	tmin.test <- step(tmin-tmin.rep)
   	tmax.test <- step(tmax.rep-tmax)
   
-  	# checking skewness and kurtosis of visits
+  	# checking skewness and kurtosis of residuals
   
   	for (i in 1:Nobs){
-    		m3.sample[i] <- pow((visits[i]-mean.visits)/(sd.visits+1.0E-100),3)
-    		m4.sample[i] <- pow((visits[i]-mean.visits)/(sd.visits+1.0E-100),4)
-    		m3.sample.rep[i] <- pow((visits.rep[i]-mean.visits.rep)/(sd.visits.rep+1.0E-100),3)
-    		m4.sample.rep[i] <- pow((visits.rep[i]-mean.visits.rep)/(sd.visits.rep+1.0E-100),4)
+    		m3.sample[i] <- pow((rs[i]-mean.rs)/(sd.rs+1.0E-100),3)
+    		m4.sample[i] <- pow((rs[i]-mean.rs)/(sd.rs+1.0E-100),4)
+    		m3.sample.rep[i] <- pow((rs.rep[i]-mean.rs.rep)/(sd.rs.rep+1.0E-100),3)
+    		m4.sample.rep[i] <- pow((rs.rep[i]-mean.rs.rep)/(sd.rs.rep+1.0E-100),4)
   	}  
   
   	m3s <- sum(m3.sample[])/Nobs
@@ -67,18 +69,18 @@ for (i in 1:C){
 
   	# p95 test
   	for (i in 1:Nobs){
-    		p95.ind[i] <- step(abs(rs[i])-2)
-    		p95.ind.rep[i] <- step(abs(rs.rep[i])-2)
+    		p95.ind[i] <- step(abs(rs.st[i])-2)
+    		p95.ind.rep[i] <- step(abs(rs.rep.st[i])-2)
   	}
   	p95.mean <- mean(p95.ind[])
   	p95.mean.rep <- mean(p95.ind.rep[])
   	p95.test <- step(p95.mean.rep-p95.mean)
   
-	# Kolmogorov-Smirnov test for visits
+	# Kolmogorov-Smirnov test for residuals
 
  	for (i in 1:Nobs){
-   		F.gauss[i] <- phi(rank.visits[i])
-   		F.gauss.rep[i] <-  phi( rank.visits.rep[i])
+   		F.gauss[i] <- phi(rank.rs[i])
+   		F.gauss.rep[i] <-  phi( rank.rs.rep[i])
 
    		F.diff[i] <- max(F.gauss[i]-(i-1)/Nobs,i/Nobs-F.gauss[i])
    		F.diff.rep[i] <- max(F.gauss.rep[i]-(i-1)/Nobs,i/Nobs-F.gauss.rep[i])
@@ -90,11 +92,11 @@ for (i in 1:C){
 
    	ks.test <- step(ks.rep-ks)  
 
-	# gap test for visits
+	# gap test for residuals
 
  	for (i in 1:(Nobs-1)){
-   	gap[i] <-   rank.visits[i+1]-rank.visits[i]
-   	gap.rep[i] <-   rank.visits.rep[i+1]-rank.visits.rep[i]
+   	gap[i] <-   rank.rs[i+1]-rank.rs[i]
+   	gap.rep[i] <-   rank.rs.rep[i+1]-rank.rs.rep[i]
 	}  
 	c1 <- Nobs-1
 	rank.gap <- sort(gap[])
@@ -106,8 +108,8 @@ for (i in 1:C){
 	
     # test8: deviance test 
 	for( i in 1 : Nobs) {
-        dev[i] <- -pow(visits[i]-mu[i],2)
-        dev.rep[i] <-  -pow(visits.rep[i]-mu[i],2)
+        dev[i] <- -pow(rs[i],2)
+        dev.rep[i] <-  -pow(rs.rep[i],2)
          }
         deviance <- sum(dev[])
         deviance.rep <- sum(dev.rep[])
