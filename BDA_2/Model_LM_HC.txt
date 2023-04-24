@@ -1,4 +1,4 @@
-model
+model 
 {
 for (i in 1:Nobs){
      		visits[i] ~dnorm(mu[i], tau)
